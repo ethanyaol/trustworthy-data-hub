@@ -7,7 +7,7 @@ import {
   Type, Image, Mic, Video, Layers, Database, FileOutput, Wrench,
   AlertTriangle, CheckCircle2, HelpCircle, Eye, Upload, Map,
   PanelRightClose, PanelRightOpen, Code2, LayoutGrid, AlignHorizontalDistributeCenter, Info,
-  Bug, Square, Clock, Activity, Terminal, Loader2
+  Bug, Square, Clock, Activity, Terminal, Loader2, Minimize2, ClipboardList
 } from "lucide-react";
 import {
   Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
@@ -510,67 +510,76 @@ const mockDatasets = [
 ];
 
 /* ─── Param Form Renderer ─── */
-const ParamFormField = ({ param, value, onChange }: { param: ParamDef; value: any; onChange: (v: any) => void }) => {
+const ParamFormField = ({ param, value, onChange, isReadOnly }: { param: ParamDef; value: any; onChange: (v: any) => void; isReadOnly?: boolean }) => {
+  const baseInputClass = "w-full mt-1 px-2.5 py-1.5 text-xs bg-white text-foreground border border-gray-200/80 rounded-md shadow-sm transition-colors focus:outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary hover:border-gray-300 placeholder:text-muted-foreground/50";
+  const btnClass = "p-[3px] border border-gray-200/80 rounded-md bg-white hover:bg-gray-50 text-muted-foreground shadow-sm transition-colors";
+
   switch (param.type) {
     case "string":
       return (
         <div>
-          <label className="text-[10px] text-muted-foreground">{param.label}{param.required && <span className="text-destructive ml-0.5">*</span>}</label>
-          {param.description && <p className="text-[9px] text-muted-foreground/70">{param.description}</p>}
+          <label className="text-[10px] text-muted-foreground/90 font-medium">{param.label}{param.required && <span className="text-destructive ml-0.5">*</span>}</label>
+          {param.description && <p className="text-[9px] text-muted-foreground/60 mt-0.5">{param.description}</p>}
           <input value={value ?? param.default ?? ""} onChange={e => onChange(e.target.value)}
-            className="w-full mt-0.5 px-2 py-1 text-xs border rounded bg-background focus:outline-none focus:ring-1 focus:ring-primary/30" />
+            disabled={isReadOnly}
+            className={baseInputClass} />
         </div>
       );
     case "integer":
       return (
         <div>
-          <label className="text-[10px] text-muted-foreground">{param.label}</label>
-          <div className="flex items-center gap-1 mt-0.5">
+          <label className="text-[10px] text-muted-foreground/90 font-medium">{param.label}</label>
+          <div className="flex items-center gap-1.5 mt-1">
             <button onClick={() => onChange(Math.max(param.min ?? -Infinity, (value ?? param.default ?? 0) - (param.step ?? 1)))}
-              className="p-0.5 border rounded hover:bg-muted/50"><Minus className="w-3 h-3" /></button>
+              disabled={isReadOnly}
+              className={`${btnClass} ${isReadOnly ? "opacity-50 cursor-not-allowed" : ""}`}><Minus className="w-3.5 h-3.5" /></button>
             <input type="number" value={value ?? param.default ?? 0}
               onChange={e => onChange(parseInt(e.target.value) || 0)}
+              disabled={isReadOnly}
               min={param.min} max={param.max}
-              className="flex-1 px-2 py-1 text-xs border rounded bg-background text-center focus:outline-none focus:ring-1 focus:ring-primary/30" />
+              className={`${baseInputClass} !mt-0 text-center font-mono ${isReadOnly ? "bg-gray-50/50" : ""}`} />
             <button onClick={() => onChange(Math.min(param.max ?? Infinity, (value ?? param.default ?? 0) + (param.step ?? 1)))}
-              className="p-0.5 border rounded hover:bg-muted/50"><Plus className="w-3 h-3" /></button>
+              disabled={isReadOnly}
+              className={`${btnClass} ${isReadOnly ? "opacity-50 cursor-not-allowed" : ""}`}><Plus className="w-3.5 h-3.5" /></button>
           </div>
         </div>
       );
     case "float":
       return (
         <div>
-          <label className="text-[10px] text-muted-foreground">{param.label}</label>
-          <div className="flex items-center gap-2 mt-1">
+          <label className="text-[10px] text-muted-foreground/90 font-medium">{param.label}</label>
+          <div className="flex items-center gap-2.5 mt-1">
             <Slider
               value={[value ?? param.default ?? 0]}
               min={param.min ?? 0}
               max={param.max ?? 1}
               step={param.step ?? 0.01}
-              onValueChange={([v]) => onChange(v)}
+              disabled={isReadOnly}
               className="flex-1"
             />
             <input type="number" value={value ?? param.default ?? 0}
               onChange={e => onChange(parseFloat(e.target.value) || 0)}
+              disabled={isReadOnly}
               step={param.step ?? 0.01} min={param.min} max={param.max}
-              className="w-16 px-1.5 py-1 text-xs border rounded bg-background text-center focus:outline-none focus:ring-1 focus:ring-primary/30" />
+              className={`${baseInputClass} !mt-0 w-16 px-1 text-center font-mono ${isReadOnly ? "bg-gray-50/50" : ""}`} />
           </div>
         </div>
       );
     case "boolean":
       return (
         <div className="flex items-center justify-between">
-          <label className="text-[10px] text-muted-foreground">{param.label}</label>
-          <Switch checked={value ?? param.default ?? false} onCheckedChange={onChange} />
+          <label className="text-[10px] text-muted-foreground/90 font-medium">{param.label}</label>
+          <Switch checked={value ?? param.default ?? false} onCheckedChange={onChange} disabled={isReadOnly} />
         </div>
       );
     case "enum":
       return (
         <div>
-          <label className="text-[10px] text-muted-foreground">{param.label}</label>
+          <label className="text-[10px] text-muted-foreground/90 font-medium">{param.label}</label>
           <select value={value ?? param.default ?? ""}
             onChange={e => onChange(e.target.value)}
-            className="w-full mt-0.5 px-2 py-1 text-xs border rounded bg-background focus:outline-none focus:ring-1 focus:ring-primary/30">
+            disabled={isReadOnly}
+            className={`${baseInputClass} ${isReadOnly ? "bg-gray-50/50 cursor-not-allowed" : ""}`}>
             {param.options?.map(o => <option key={o} value={o}>{o}</option>)}
           </select>
         </div>
@@ -578,8 +587,8 @@ const ParamFormField = ({ param, value, onChange }: { param: ParamDef; value: an
     case "enum_multi":
       return (
         <div>
-          <label className="text-[10px] text-muted-foreground">{param.label}</label>
-          <div className="flex flex-wrap gap-1 mt-1">
+          <label className="text-[10px] text-muted-foreground/90 font-medium">{param.label}</label>
+          <div className="flex flex-wrap gap-1.5 mt-1">
             {param.options?.map(o => {
               const selected = (value || []).includes(o);
               return (
@@ -587,7 +596,7 @@ const ParamFormField = ({ param, value, onChange }: { param: ParamDef; value: an
                   const arr = value || [];
                   onChange(selected ? arr.filter((x: string) => x !== o) : [...arr, o]);
                 }}
-                  className={`px-1.5 py-0.5 text-[10px] rounded border ${selected ? "bg-primary text-primary-foreground border-primary" : "bg-background border-border hover:bg-muted/50"}`}>
+                  className={`px-2 py-1 text-[10px] rounded-md border shadow-sm transition-colors ${selected ? "bg-primary text-primary-foreground border-primary" : "bg-white border-gray-200/80 hover:bg-gray-50 text-muted-foreground"}`}>
                   {o}
                 </button>
               );
@@ -598,57 +607,58 @@ const ParamFormField = ({ param, value, onChange }: { param: ParamDef; value: an
     case "range":
       return (
         <div>
-          <label className="text-[10px] text-muted-foreground">{param.label}</label>
+          <label className="text-[10px] text-muted-foreground/90 font-medium">{param.label}</label>
           <div className="flex items-center gap-2 mt-1">
             <input type="number" placeholder="最小" value={value?.[0] ?? param.min ?? 0}
               onChange={e => onChange([parseFloat(e.target.value), value?.[1] ?? param.max ?? 100])}
-              className="flex-1 px-1.5 py-1 text-xs border rounded bg-background focus:outline-none focus:ring-1 focus:ring-primary/30" />
-            <span className="text-[10px] text-muted-foreground">~</span>
+              className={`${baseInputClass} !mt-0 font-mono`} />
+            <span className="text-[10px] text-muted-foreground font-medium">~</span>
             <input type="number" placeholder="最大" value={value?.[1] ?? param.max ?? 100}
               onChange={e => onChange([value?.[0] ?? param.min ?? 0, parseFloat(e.target.value)])}
-              className="flex-1 px-1.5 py-1 text-xs border rounded bg-background focus:outline-none focus:ring-1 focus:ring-primary/30" />
+              className={`${baseInputClass} !mt-0 font-mono`} />
           </div>
         </div>
       );
     case "regex":
       return (
         <div>
-          <label className="text-[10px] text-muted-foreground">{param.label}{param.required && <span className="text-destructive ml-0.5">*</span>}</label>
-          {param.description && <p className="text-[9px] text-muted-foreground/70">{param.description}</p>}
+          <label className="text-[10px] text-muted-foreground/90 font-medium">{param.label}{param.required && <span className="text-destructive ml-0.5">*</span>}</label>
+          {param.description && <p className="text-[9px] text-muted-foreground/60 mt-0.5">{param.description}</p>}
           <input value={value ?? param.default ?? ""} onChange={e => onChange(e.target.value)}
-            className="w-full mt-0.5 px-2 py-1 text-xs border rounded bg-background font-mono focus:outline-none focus:ring-1 focus:ring-primary/30"
+            className={`${baseInputClass} font-mono`}
             placeholder="/pattern/" />
         </div>
       );
     case "keyvalue":
       return (
         <div>
-          <label className="text-[10px] text-muted-foreground">{param.label}</label>
-          <div className="mt-1 space-y-1">
+          <label className="text-[10px] text-muted-foreground/90 font-medium">{param.label}</label>
+          <div className="mt-1 space-y-1.5 p-1.5 border border-gray-100/50 bg-gray-50/30 rounded-md">
             {(value || [{ key: "", value: "" }]).map((kv: { key: string; value: string }, i: number) => (
-              <div key={i} className="flex items-center gap-1">
+              <div key={i} className="flex items-center gap-1.5 focus-within:ring-0">
                 <input placeholder="键" value={kv.key}
                   onChange={e => { const arr = [...(value || [{ key: "", value: "" }])]; arr[i] = { ...arr[i], key: e.target.value }; onChange(arr); }}
-                  className="flex-1 px-1.5 py-1 text-xs border rounded bg-background focus:outline-none focus:ring-1 focus:ring-primary/30" />
+                  className={`${baseInputClass} !mt-0 px-2`} />
+                <span className="text-muted-foreground/30 text-[10px] font-bold">:</span>
                 <input placeholder="值" value={kv.value}
                   onChange={e => { const arr = [...(value || [{ key: "", value: "" }])]; arr[i] = { ...arr[i], value: e.target.value }; onChange(arr); }}
-                  className="flex-1 px-1.5 py-1 text-xs border rounded bg-background focus:outline-none focus:ring-1 focus:ring-primary/30" />
+                  className={`${baseInputClass} !mt-0 px-2`} />
                 <button onClick={() => { const arr = [...(value || [])]; arr.splice(i, 1); onChange(arr.length ? arr : [{ key: "", value: "" }]); }}
-                  className="p-0.5 text-muted-foreground hover:text-destructive"><X className="w-3 h-3" /></button>
+                  className="p-1 text-muted-foreground/50 hover:text-destructive transition-colors"><X className="w-3 h-3" /></button>
               </div>
             ))}
             <button onClick={() => onChange([...(value || []), { key: "", value: "" }])}
-              className="text-[10px] text-primary hover:underline flex items-center gap-0.5"><Plus className="w-3 h-3" />添加</button>
+              className="text-[10px] text-primary hover:text-primary/80 flex items-center gap-0.5 font-medium px-1.5"><Plus className="w-3 h-3" />增加新项</button>
           </div>
         </div>
       );
     case "file":
       return (
         <div>
-          <label className="text-[10px] text-muted-foreground">{param.label}</label>
-          <div className="mt-0.5 border rounded px-2 py-2 flex items-center gap-2 bg-background">
-            <Upload className="w-3.5 h-3.5 text-muted-foreground" />
-            <span className="text-xs text-muted-foreground">{value ? "已上传" : "点击上传文件"}</span>
+          <label className="text-[10px] text-muted-foreground/90 font-medium">{param.label}</label>
+          <div className="mt-1 border border-dashed border-gray-300 hover:border-primary/40 rounded-md bg-white shadow-sm px-3 py-3 flex items-center justify-center gap-2 cursor-pointer transition-colors">
+            <Upload className="w-4 h-4 text-muted-foreground/70" />
+            <span className="text-[11px] text-muted-foreground font-medium">{value ? "已成功选择文件" : "点击或拖拽上传此项"}</span>
           </div>
         </div>
       );
@@ -661,7 +671,9 @@ const ParamFormField = ({ param, value, onChange }: { param: ParamDef; value: an
 const WorkflowCanvas = ({ isReadOnly: isReadOnlyProp }: { isReadOnly?: boolean }) => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const isReadOnly = isReadOnlyProp ?? searchParams.get("mode") === "view";
+  const instanceId = searchParams.get("instanceId");
+  const isExecutionView = !!instanceId;
+  const isReadOnly = isReadOnlyProp ?? (searchParams.get("mode") === "view" || isExecutionView);
   const wfName = searchParams.get("name") || "新建工作流";
   const templateId = searchParams.get("template");
 
@@ -815,8 +827,11 @@ const WorkflowCanvas = ({ isReadOnly: isReadOnlyProp }: { isReadOnly?: boolean }
   const [debugElapsed, setDebugElapsed] = useState(0);
   const [debugNodeStates, setDebugNodeStates] = useState<Record<string, { status: "pending" | "running" | "done" | "error"; count: number; duration: number }>>({});
   const [debugLogs, setDebugLogs] = useState<Record<string, string[]>>({});
-  const [showLogPanel, setShowLogPanel] = useState(false);
   const [logNodeId, setLogNodeId] = useState<string | null>(null);
+  const [isLogExpanded, setIsLogExpanded] = useState(false);
+  const [logHeight, setLogHeight] = useState(300);
+  const [isDraggingLog, setIsDraggingLog] = useState(false);
+  const [rightPanelTab, setRightPanelTab] = useState<"debug" | "config">("debug");
   const debugTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Validation
@@ -1027,17 +1042,21 @@ const WorkflowCanvas = ({ isReadOnly: isReadOnlyProp }: { isReadOnly?: boolean }
         }));
         setPanStart({ x: e.clientX, y: e.clientY });
       }
+      if (isDraggingLog) {
+        setLogHeight(Math.max(100, Math.min(window.innerHeight - e.clientY, window.innerHeight - 150)));
+      }
     };
     const handleUp = () => {
       setDraggingNode(null);
       setIsPanning(false);
       setMinimapDragging(false);
+      setIsDraggingLog(false);
       if (connecting) setConnecting(null);
     };
     window.addEventListener("mousemove", handleMove);
     window.addEventListener("mouseup", handleUp);
     return () => { window.removeEventListener("mousemove", handleMove); window.removeEventListener("mouseup", handleUp); };
-  }, [draggingNode, dragOffset, isPanning, panStart, connecting, screenToCanvas]);
+  }, [draggingNode, dragOffset, isPanning, panStart, connecting, isDraggingLog, screenToCanvas]);
 
   /* ─── Canvas pan ─── */
   const startPan = (e: React.MouseEvent) => {
@@ -1210,8 +1229,10 @@ const WorkflowCanvas = ({ isReadOnly: isReadOnlyProp }: { isReadOnly?: boolean }
     if (nodes.length === 0) { toast.error("画布中没有节点"); return; }
     setDebugMode(true);
     setDebugElapsed(0);
-    setShowLogPanel(false);
+    setRightPanelTab("debug");
+    setRightPanelCollapsed(false); // auto-open right panel for debug mode
     setLogNodeId(null);
+    setIsLogExpanded(false); // reset expand state when starting
     // Initialize all nodes as pending
     const initStates: typeof debugNodeStates = {};
     const initLogs: Record<string, string[]> = {};
@@ -1291,8 +1312,9 @@ const WorkflowCanvas = ({ isReadOnly: isReadOnlyProp }: { isReadOnly?: boolean }
   const stopDebug = useCallback(() => {
     setDebugMode(false);
     if (debugTimerRef.current) { clearInterval(debugTimerRef.current); debugTimerRef.current = null; }
-    setShowLogPanel(false);
+    setIsLogExpanded(false);
     setLogNodeId(null);
+    setRightPanelTab("config");
     setPanelMode("default");
     toast.info("调试已停止");
   }, []);
@@ -1312,6 +1334,7 @@ const WorkflowCanvas = ({ isReadOnly: isReadOnlyProp }: { isReadOnly?: boolean }
 
   /* ─── Submit run instance ─── */
   const submitRunInstance = useCallback(() => {
+    toast.success("工作流已自动保存");
     const now = new Date();
     const snapshotVersion = `SNAP-${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}-${String(now.getHours()).padStart(2, "0")}${String(now.getMinutes()).padStart(2, "0")}${String(now.getSeconds()).padStart(2, "0")}`;
     const instance: WorkflowInstance = {
@@ -1326,10 +1349,12 @@ const WorkflowCanvas = ({ isReadOnly: isReadOnlyProp }: { isReadOnly?: boolean }
     setWorkflowInstances(prev => [instance, ...prev]);
     setPanelMode("default");
     toast.success(`实例 ${snapshotVersion} 已提交运行`);
-  }, [nodes, connections, wfMaxParallel, wfTimeout, wfFailStrategy, wfRetryMax, wfRetryInterval]);
+    setTimeout(() => navigate("/data-process/run-records"), 600);
+  }, [nodes, connections, wfMaxParallel, wfTimeout, wfFailStrategy, wfRetryMax, wfRetryInterval, navigate]);
 
   /* ─── Submit debug with params ─── */
   const submitDebugRun = useCallback(() => {
+    toast.success("工作流已自动保存");
     setPanelMode("default");
     startDebug();
   }, [startDebug]);
@@ -1499,17 +1524,27 @@ const WorkflowCanvas = ({ isReadOnly: isReadOnlyProp }: { isReadOnly?: boolean }
     }
   }, [nodes, zoom]);
 
-  // Debug elapsed timer
-  useEffect(() => {
-    if (debugMode) {
-      debugTimerRef.current = setInterval(() => setDebugElapsed(prev => prev + 1), 1000);
-      return () => { if (debugTimerRef.current) clearInterval(debugTimerRef.current); };
-    }
-  }, [debugMode]);
-
   const debugDoneCount = useMemo(() => Object.values(debugNodeStates).filter(s => s.status === "done").length, [debugNodeStates]);
   const debugRunningCount = useMemo(() => Object.values(debugNodeStates).filter(s => s.status === "running").length, [debugNodeStates]);
   const debugAllDone = debugMode && debugDoneCount === nodes.length && nodes.length > 0;
+
+  // Debug elapsed timer
+  useEffect(() => {
+    if (debugMode && !debugAllDone) {
+      debugTimerRef.current = setInterval(() => setDebugElapsed(prev => prev + 1), 1000);
+      return () => { if (debugTimerRef.current) clearInterval(debugTimerRef.current); };
+    }
+  }, [debugMode, debugAllDone]);
+
+  // Auto-start execution simulation in execution view mode
+  const executionStartedRef = useRef(false);
+  useEffect(() => {
+    if (isExecutionView && nodes.length > 0 && !executionStartedRef.current) {
+      executionStartedRef.current = true;
+      startDebug();
+    }
+  }, [isExecutionView, nodes.length, startDebug]);
+
   const formatElapsed = (s: number) => {
     const h = String(Math.floor(s / 3600)).padStart(2, "0");
     const m = String(Math.floor((s % 3600) / 60)).padStart(2, "0");
@@ -1538,10 +1573,140 @@ const WorkflowCanvas = ({ isReadOnly: isReadOnlyProp }: { isReadOnly?: boolean }
     return Math.max(30, nodeCount * 15 + Math.floor(Math.random() * 60));
   }, [nodes]);
 
-  /* ─── Right panel: render property panel ─── */
   const renderPropertyPanel = () => {
     if (rightPanelCollapsed) return null;
     const panelWidth = 300;
+
+    const baseInputClass = "w-full mt-1 px-2.5 py-1.5 text-xs bg-white text-foreground border border-gray-200/80 rounded-md shadow-sm transition-colors focus:outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary hover:border-gray-300 placeholder:text-muted-foreground/50";
+    const btnClass = "p-[3px] border border-gray-200/80 rounded-md bg-white hover:bg-gray-50 text-muted-foreground shadow-sm transition-colors";
+
+    // Debug active panel
+    if (debugMode && rightPanelTab === "debug") {
+      return (
+        <div className="border-l bg-card shrink-0 flex flex-col overflow-hidden relative" style={{ width: panelWidth }}>
+          <div className="p-3 border-b flex items-center justify-between">
+            <span className="text-xs font-medium text-foreground flex items-center gap-1.5">
+              {isExecutionView ? <Activity className="w-3.5 h-3.5 text-primary" /> : <Bug className="w-3.5 h-3.5 text-primary" />}
+              {isExecutionView ? "运行监控" : "调试监控"}
+              <span className="ml-2 flex items-center gap-1 font-normal text-muted-foreground">
+                {debugAllDone ? <CheckCircle2 className="w-3 h-3 text-green-500" /> : <Loader2 className="w-3 h-3 text-primary animate-spin" />}
+                {debugAllDone ? "已完成" : "运行中..."}
+              </span>
+            </span>
+            <button
+              onClick={() => setRightPanelCollapsed(true)}
+              className="p-1 hover:bg-muted/50 rounded text-muted-foreground hover:text-foreground transition-colors"
+              title="关闭面板"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          <div className="flex-1 flex flex-col overflow-hidden">
+            {/* Top Dashboard */}
+            <div className="p-3 border-b bg-muted/10 shrink-0 space-y-3">
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-muted-foreground">运行时长</span>
+                <span className="font-mono">{formatElapsed(debugElapsed)}</span>
+              </div>
+              <div className="space-y-1.5">
+                <div className="flex justify-between items-center text-[10px] text-muted-foreground">
+                  <span>执行进度</span>
+                  <span>{debugDoneCount} / {nodes.length} 节点</span>
+                </div>
+                <div className="h-1.5 w-full bg-muted overflow-hidden rounded-full">
+                  <div
+                    className="h-full bg-primary transition-all duration-300 ease-out"
+                    style={{ width: `${nodes.length > 0 ? (debugDoneCount / nodes.length) * 100 : 0}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Node List */}
+            <div className={`flex-1 overflow-y-auto p-2 space-y-1 border-b`}>
+              <p className="px-1 text-[10px] font-semibold text-foreground uppercase tracking-wider mb-2">执行明细</p>
+              {nodes.map(node => {
+                const state = debugNodeStates[node.id];
+                if (!state) return null;
+                const isSelected = logNodeId === node.id;
+                return (
+                  <button
+                    key={node.id}
+                    onClick={() => setLogNodeId(node.id)}
+                    className={`w-full text-left px-2 py-2 rounded-md transition-colors flex flex-col gap-1.5 border ${isSelected ? "bg-primary/5 border-primary/20 ring-1 ring-primary/20" : "bg-card border-transparent hover:bg-muted/50"
+                      }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5 text-xs truncate">
+                        <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: catColors[node.category] }} />
+                        <span className="truncate max-w-[160px]">{node.customLabel || node.label}</span>
+                      </div>
+                      <div className="shrink-0 flex items-center">
+                        {state.status === "pending" && <span className="text-[10px] text-muted-foreground">等待中</span>}
+                        {state.status === "running" && <Loader2 className="w-3 h-3 text-primary animate-spin" />}
+                        {state.status === "done" && <CheckCircle2 className="w-3 h-3 text-green-500" />}
+                        {state.status === "error" && <AlertTriangle className="w-3 h-3 text-destructive" />}
+                      </div>
+                    </div>
+                    {state.status === "done" && (
+                      <div className="flex items-center gap-3 text-[10px] text-muted-foreground pl-3">
+                        <span className="flex items-center gap-1" title="处理数据量"><Activity className="w-2.5 h-2.5" /> {state.count.toLocaleString()}</span>
+                        <span className="flex items-center gap-1" title="耗时"><Clock className="w-2.5 h-2.5" /> {state.duration}s</span>
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Logs Area (Small) */}
+            {!isLogExpanded && (
+              <div className="flex flex-col bg-card h-48 shrink-0 border-t">
+                <div className="px-3 py-1.5 border-b bg-muted/30 flex justify-between items-center shrink-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-semibold uppercase tracking-wider">节点日志</span>
+                    <span className="text-[10px] text-muted-foreground truncate max-w-[150px]">
+                      {nodes.find(n => n.id === logNodeId)?.label || "未选择"}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => setIsLogExpanded(true)}
+                      className="p-1 hover:bg-muted/50 rounded text-muted-foreground hover:text-foreground transition-colors"
+                      title="向左侧放大显示"
+                    >
+                      <Maximize2 className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => setLogNodeId(null)}
+                      className="p-1 hover:bg-muted/50 rounded text-muted-foreground hover:text-foreground transition-colors"
+                      title="关闭日志"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+                <div className="flex-1 overflow-y-auto p-2 font-mono text-[10px] text-muted-foreground bg-muted/5">
+                  {!logNodeId ? (
+                    <div className="flex flex-col items-center justify-center h-full text-[10px] text-muted-foreground/60">
+                      <Terminal className="w-4 h-4 mb-2 opacity-50" />
+                      点击上方节点查看日志
+                    </div>
+                  ) : (debugLogs[logNodeId] || []).length === 0 ? (
+                    <div className="text-muted-foreground/50">暂无日志输出...</div>
+                  ) : (
+                    (debugLogs[logNodeId] || []).map((line, i) => (
+                      <div key={i} className="mb-0.5 whitespace-pre-wrap">{line}</div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
 
     // Run submission confirmation panel
     if (panelMode === "runSubmit") {
@@ -1660,7 +1825,7 @@ const WorkflowCanvas = ({ isReadOnly: isReadOnlyProp }: { isReadOnly?: boolean }
                     <select
                       value={debugInputParams[n.id]?.samplingMode || "all"}
                       onChange={e => setDebugInputParams(prev => ({ ...prev, [n.id]: { ...prev[n.id], samplingMode: e.target.value } }))}
-                      className="w-full mt-0.5 px-2 py-1.5 text-xs border rounded-md bg-background focus:outline-none focus:ring-1 focus:ring-primary/30"
+                      className={baseInputClass}
                     >
                       <option value="all">全量</option>
                       <option value="ratio">按比例采样</option>
@@ -1689,7 +1854,7 @@ const WorkflowCanvas = ({ isReadOnly: isReadOnlyProp }: { isReadOnly?: boolean }
                         value={debugInputParams[n.id]?.count ?? 100}
                         onChange={e => setDebugInputParams(prev => ({ ...prev, [n.id]: { ...prev[n.id], count: parseInt(e.target.value) || 0 } }))}
                         min={1}
-                        className="w-full mt-0.5 px-2 py-1.5 text-xs border rounded-md bg-background focus:outline-none focus:ring-1 focus:ring-primary/30"
+                        className={baseInputClass}
                       />
                     </div>
                   )}
@@ -1750,13 +1915,14 @@ const WorkflowCanvas = ({ isReadOnly: isReadOnlyProp }: { isReadOnly?: boolean }
               <p className="text-[10px] font-semibold text-foreground uppercase tracking-wider">基本信息</p>
               <div>
                 <label className="text-[10px] text-muted-foreground">工作流名称</label>
-                <input value={wfName} readOnly className="w-full mt-0.5 px-2 py-1.5 text-xs border rounded-md bg-muted/30 text-foreground" />
+                <input value={wfName} readOnly className="w-full mt-1 px-2.5 py-1.5 text-xs bg-gray-50/50 text-muted-foreground border border-gray-200/80 rounded-md shadow-sm cursor-not-allowed" />
               </div>
               <div>
                 <label className="text-[10px] text-muted-foreground">描述</label>
                 <textarea value={wfDesc} onChange={e => setWfDesc(e.target.value)} rows={3} maxLength={200}
                   placeholder="工作流描述（最多200字符）"
-                  className="w-full mt-0.5 px-2 py-1.5 text-xs border rounded-md bg-background resize-none focus:outline-none focus:ring-1 focus:ring-primary/30" />
+                  disabled={isReadOnly}
+                  className={`${baseInputClass} resize-none ${isReadOnly ? "bg-gray-50/50" : ""}`} />
                 <p className="text-[9px] text-muted-foreground text-right">{wfDesc.length}/200</p>
               </div>
               <div>
@@ -1784,25 +1950,30 @@ const WorkflowCanvas = ({ isReadOnly: isReadOnlyProp }: { isReadOnly?: boolean }
               <p className="text-[10px] font-semibold text-foreground uppercase tracking-wider">执行配置</p>
               <div>
                 <label className="text-[10px] text-muted-foreground">最大并行数</label>
-                <div className="flex items-center gap-1 mt-0.5">
+                <div className="flex items-center gap-1.5 mt-1">
                   <button onClick={() => setWfMaxParallel(Math.max(1, wfMaxParallel - 1))}
-                    className="p-0.5 border rounded hover:bg-muted/50"><Minus className="w-3 h-3" /></button>
+                    disabled={isReadOnly}
+                    className={`${btnClass} ${isReadOnly ? "opacity-50 cursor-not-allowed" : ""}`}><Minus className="w-3.5 h-3.5" /></button>
                   <input type="number" value={wfMaxParallel} onChange={e => setWfMaxParallel(parseInt(e.target.value) || 1)}
+                    disabled={isReadOnly}
                     min={1} max={64}
-                    className="flex-1 px-2 py-1 text-xs border rounded bg-background text-center focus:outline-none focus:ring-1 focus:ring-primary/30" />
+                    className={`${baseInputClass} !mt-0 w-20 px-1 text-center font-mono ${isReadOnly ? "bg-gray-50/50" : ""}`} />
                   <button onClick={() => setWfMaxParallel(Math.min(64, wfMaxParallel + 1))}
-                    className="p-0.5 border rounded hover:bg-muted/50"><Plus className="w-3 h-3" /></button>
+                    disabled={isReadOnly}
+                    className={`${btnClass} ${isReadOnly ? "opacity-50 cursor-not-allowed" : ""}`}><Plus className="w-3.5 h-3.5" /></button>
                 </div>
               </div>
               <div>
-                <label className="text-[10px] text-muted-foreground">超时时间（秒）</label>
+                <label className="text-[10px] text-muted-foreground/90 font-medium">超时时间（秒）</label>
                 <input type="number" value={wfTimeout} onChange={e => setWfTimeout(parseInt(e.target.value) || 0)} min={0}
-                  className="w-full mt-0.5 px-2 py-1.5 text-xs border rounded-md bg-background focus:outline-none focus:ring-1 focus:ring-primary/30" />
+                  disabled={isReadOnly}
+                  className={`${baseInputClass} ${isReadOnly ? "bg-gray-50/50" : ""}`} />
               </div>
               <div>
-                <label className="text-[10px] text-muted-foreground">失败策略</label>
+                <label className="text-[10px] text-muted-foreground/90 font-medium">失败策略</label>
                 <select value={wfFailStrategy} onChange={e => setWfFailStrategy(e.target.value as any)}
-                  className="w-full mt-0.5 px-2 py-1.5 text-xs border rounded-md bg-background focus:outline-none focus:ring-1 focus:ring-primary/30">
+                  disabled={isReadOnly}
+                  className={`${baseInputClass} ${isReadOnly ? "bg-gray-50/50 cursor-not-allowed" : ""}`}>
                   <option value="stop">停止</option>
                   <option value="skip">跳过</option>
                   <option value="retry">重试</option>
@@ -1814,13 +1985,13 @@ const WorkflowCanvas = ({ isReadOnly: isReadOnlyProp }: { isReadOnly?: boolean }
                     <label className="text-[10px] text-muted-foreground">最大重试次数</label>
                     <input type="number" value={wfRetryMax} onChange={e => setWfRetryMax(parseInt(e.target.value) || 1)}
                       min={1} max={10}
-                      className="w-full mt-0.5 px-2 py-1.5 text-xs border rounded-md bg-background focus:outline-none focus:ring-1 focus:ring-primary/30" />
+                      className={baseInputClass} />
                   </div>
                   <div>
                     <label className="text-[10px] text-muted-foreground">重试间隔（秒）</label>
                     <input type="number" value={wfRetryInterval} onChange={e => setWfRetryInterval(parseInt(e.target.value) || 1)}
                       min={1}
-                      className="w-full mt-0.5 px-2 py-1.5 text-xs border rounded-md bg-background focus:outline-none focus:ring-1 focus:ring-primary/30" />
+                      className={baseInputClass} />
                   </div>
                 </>
               )}
@@ -1859,11 +2030,12 @@ const WorkflowCanvas = ({ isReadOnly: isReadOnlyProp }: { isReadOnly?: boolean }
             </button>
           </div>
           <div className="flex-1 overflow-y-auto p-3 space-y-4">
-            <div>
-              <label className="text-[10px] text-muted-foreground">节点名称</label>
+            <div className="space-y-1">
+              <label className="text-[10px] text-muted-foreground/90 font-medium whitespace-nowrap">节点名称</label>
               <input value={selectedNodeData.label}
                 onChange={e => setNodes(prev => prev.map(n => n.id === selectedNode ? { ...n, label: e.target.value } : n))}
-                className="w-full mt-0.5 px-2 py-1.5 text-xs border rounded-md bg-background focus:outline-none focus:ring-1 focus:ring-primary/30" />
+                readOnly={isReadOnly}
+                className={`${baseInputClass} ${isReadOnly ? "bg-gray-50/50 cursor-not-allowed" : ""}`} />
             </div>
             <div>
               <label className="text-[10px] text-muted-foreground">节点ID</label>
@@ -1887,18 +2059,20 @@ const WorkflowCanvas = ({ isReadOnly: isReadOnlyProp }: { isReadOnly?: boolean }
                 /* Dataset input */
                 <>
                   <div>
-                    <label className="text-[10px] text-muted-foreground">选择数据集</label>
+                    <label className="text-[10px] text-muted-foreground/90 font-medium">选择数据集</label>
                     <select value={inputDataset} onChange={e => { setInputDataset(e.target.value); setInputVersion(""); }}
-                      className="w-full mt-0.5 px-2 py-1.5 text-xs border rounded-md bg-background focus:outline-none focus:ring-1 focus:ring-primary/30">
+                      disabled={isReadOnly}
+                      className={`${baseInputClass} ${isReadOnly ? "bg-gray-50/50 cursor-not-allowed" : ""}`}>
                       <option value="">请选择数据集</option>
                       {mockDatasets.map(ds => <option key={ds.id} value={ds.id}>{ds.name}</option>)}
                     </select>
                   </div>
                   {inputDataset && (
                     <div>
-                      <label className="text-[10px] text-muted-foreground">选择版本</label>
+                      <label className="text-[10px] text-muted-foreground/90 font-medium">选择版本</label>
                       <select value={inputVersion} onChange={e => setInputVersion(e.target.value)}
-                        className="w-full mt-0.5 px-2 py-1.5 text-xs border rounded-md bg-background focus:outline-none focus:ring-1 focus:ring-primary/30">
+                        disabled={isReadOnly}
+                        className={`${baseInputClass} ${isReadOnly ? "bg-gray-50/50 cursor-not-allowed" : ""}`}>
                         <option value="">请选择版本</option>
                         {mockDatasets.find(d => d.id === inputDataset)?.versions.map(v => (
                           <option key={v.id} value={v.id}>{v.name}</option>
@@ -1927,10 +2101,11 @@ const WorkflowCanvas = ({ isReadOnly: isReadOnlyProp }: { isReadOnly?: boolean }
               <p className="text-[10px] font-semibold text-foreground uppercase tracking-wider">高级配置</p>
               <div>
                 <label className="text-[10px] text-muted-foreground">采样模式</label>
-                <div className="flex gap-1 mt-1">
+                <div className="flex gap-1.5 mt-1">
                   {([["all", "全量"], ["ratio", "按比例"], ["count", "按条数"]] as const).map(([mode, label]) => (
                     <button key={mode} onClick={() => setInputSamplingMode(mode)}
-                      className={`flex-1 px-1.5 py-1 text-[10px] rounded-md border ${inputSamplingMode === mode ? "bg-primary text-primary-foreground border-primary" : "bg-background hover:bg-muted/50"}`}>
+                      disabled={isReadOnly}
+                      className={`flex-1 px-1.5 py-1.5 text-[10px] rounded-md border shadow-sm transition-all ${inputSamplingMode === mode ? "bg-primary text-primary-foreground border-primary" : "bg-white text-muted-foreground border-gray-200/80 hover:border-gray-300 hover:bg-gray-50"} ${isReadOnly ? "cursor-not-allowed opacity-80" : ""}`}>
                       {label}
                     </button>
                   ))}
@@ -1941,6 +2116,7 @@ const WorkflowCanvas = ({ isReadOnly: isReadOnlyProp }: { isReadOnly?: boolean }
                   <label className="text-[10px] text-muted-foreground">采样比例</label>
                   <div className="flex items-center gap-2 mt-1">
                     <Slider value={[inputSampleRatio]} min={1} max={100} step={1}
+                      disabled={isReadOnly}
                       onValueChange={([v]) => setInputSampleRatio(v)} className="flex-1" />
                     <span className="text-xs text-foreground w-10 text-right">{inputSampleRatio}%</span>
                   </div>
@@ -1951,7 +2127,8 @@ const WorkflowCanvas = ({ isReadOnly: isReadOnlyProp }: { isReadOnly?: boolean }
                   <label className="text-[10px] text-muted-foreground">前N条</label>
                   <input type="number" value={inputSampleCount} onChange={e => setInputSampleCount(parseInt(e.target.value) || 0)}
                     min={1} placeholder="输入条数"
-                    className="w-full mt-0.5 px-2 py-1.5 text-xs border rounded-md bg-background focus:outline-none focus:ring-1 focus:ring-primary/30" />
+                    disabled={isReadOnly}
+                    className={`${baseInputClass} ${isReadOnly ? "bg-gray-50/50 cursor-not-allowed" : ""}`} />
                 </div>
               )}
             </div>
@@ -1978,7 +2155,8 @@ const WorkflowCanvas = ({ isReadOnly: isReadOnlyProp }: { isReadOnly?: boolean }
               <label className="text-[10px] text-muted-foreground">节点名称</label>
               <input value={selectedNodeData.label}
                 onChange={e => setNodes(prev => prev.map(n => n.id === selectedNode ? { ...n, label: e.target.value } : n))}
-                className="w-full mt-0.5 px-2 py-1.5 text-xs border rounded-md bg-background focus:outline-none focus:ring-1 focus:ring-primary/30" />
+                readOnly={isReadOnly}
+                className={`w-full mt-0.5 px-2 py-1.5 text-xs border rounded-md bg-background focus:outline-none focus:ring-1 focus:ring-primary/30 ${isReadOnly ? "bg-gray-50/50 cursor-not-allowed" : ""}`} />
             </div>
             <div>
               <label className="text-[10px] text-muted-foreground">节点ID</label>
@@ -1992,9 +2170,10 @@ const WorkflowCanvas = ({ isReadOnly: isReadOnlyProp }: { isReadOnly?: boolean }
                 /* File output */
                 <div className="space-y-3">
                   <div>
-                    <label className="text-[10px] text-muted-foreground">导出格式</label>
+                    <label className="text-[10px] text-muted-foreground/90 font-medium">导出格式</label>
                     <select value={outputFormat} onChange={e => setOutputFormat(e.target.value)}
-                      className="w-full mt-0.5 px-2 py-1.5 text-xs border rounded-md bg-background focus:outline-none focus:ring-1 focus:ring-primary/30">
+                      disabled={isReadOnly}
+                      className={`${baseInputClass} ${isReadOnly ? "bg-gray-50/50 cursor-not-allowed" : ""}`}>
                       <option value="jsonl">JSONL</option>
                       <option value="json">JSON</option>
                       <option value="csv">CSV</option>
@@ -2007,14 +2186,16 @@ const WorkflowCanvas = ({ isReadOnly: isReadOnlyProp }: { isReadOnly?: boolean }
                 /* Dataset output */
                 <div className="space-y-3">
                   <div>
-                    <label className="text-[10px] text-muted-foreground">输出类型</label>
+                    <label className="text-[10px] text-muted-foreground/90 font-medium">输出类型</label>
                     <div className="flex gap-2 mt-1">
                       <button onClick={() => setOutputTargetType("new")}
-                        className={`flex-1 px-2 py-1.5 text-xs rounded-md border ${outputTargetType === "new" ? "bg-primary text-primary-foreground border-primary" : "bg-background hover:bg-muted/50"}`}>
+                        disabled={isReadOnly}
+                        className={`flex-1 px-2 py-1.5 text-xs rounded-md border shadow-sm transition-all ${outputTargetType === "new" ? "bg-primary text-primary-foreground border-primary" : "bg-white text-muted-foreground border-gray-200/80 hover:border-gray-300 hover:bg-gray-50"} ${isReadOnly ? "cursor-not-allowed opacity-80" : ""}`}>
                         新建数据集
                       </button>
                       <button onClick={() => setOutputTargetType("append")}
-                        className={`flex-1 px-2 py-1.5 text-xs rounded-md border ${outputTargetType === "append" ? "bg-primary text-primary-foreground border-primary" : "bg-background hover:bg-muted/50"}`}>
+                        disabled={isReadOnly}
+                        className={`flex-1 px-2 py-1.5 text-xs rounded-md border shadow-sm transition-all ${outputTargetType === "append" ? "bg-primary text-primary-foreground border-primary" : "bg-white text-muted-foreground border-gray-200/80 hover:border-gray-300 hover:bg-gray-50"} ${isReadOnly ? "cursor-not-allowed opacity-80" : ""}`}>
                         追加至已有
                       </button>
                     </div>
@@ -2022,26 +2203,29 @@ const WorkflowCanvas = ({ isReadOnly: isReadOnlyProp }: { isReadOnly?: boolean }
 
                   {outputTargetType === "new" ? (
                     <div>
-                      <label className="text-[10px] text-muted-foreground">新数据集名称</label>
+                      <label className="text-[10px] text-muted-foreground/90 font-medium">新数据集名称</label>
                       <input value={outputNewName} onChange={e => setOutputNewName(e.target.value)}
                         placeholder="请输入数据集名称"
-                        className="w-full mt-0.5 px-2 py-1.5 text-xs border rounded-md bg-background focus:outline-none focus:ring-1 focus:ring-primary/30" />
+                        readOnly={isReadOnly}
+                        className={`${baseInputClass} ${isReadOnly ? "bg-gray-50/50 cursor-not-allowed" : ""}`} />
                     </div>
                   ) : (
                     <>
                       <div>
-                        <label className="text-[10px] text-muted-foreground">选择数据集</label>
+                        <label className="text-[10px] text-muted-foreground/90 font-medium">选择数据集</label>
                         <select value={outputDataset} onChange={e => { setOutputDataset(e.target.value); setOutputVersion(""); }}
-                          className="w-full mt-0.5 px-2 py-1.5 text-xs border rounded-md bg-background focus:outline-none focus:ring-1 focus:ring-primary/30">
+                          disabled={isReadOnly}
+                          className={`${baseInputClass} ${isReadOnly ? "bg-gray-50/50 cursor-not-allowed" : ""}`}>
                           <option value="">请选择数据集</option>
                           {mockDatasets.map(ds => <option key={ds.id} value={ds.id}>{ds.name}</option>)}
                         </select>
                       </div>
                       {outputDataset && (
                         <div>
-                          <label className="text-[10px] text-muted-foreground">选择版本</label>
+                          <label className="text-[10px] text-muted-foreground/90 font-medium">选择版本</label>
                           <select value={outputVersion} onChange={e => setOutputVersion(e.target.value)}
-                            className="w-full mt-0.5 px-2 py-1.5 text-xs border rounded-md bg-background focus:outline-none focus:ring-1 focus:ring-primary/30">
+                            disabled={isReadOnly}
+                            className={`${baseInputClass} ${isReadOnly ? "bg-gray-50/50 cursor-not-allowed" : ""}`}>
                             <option value="">请选择版本</option>
                             {mockDatasets.find(d => d.id === outputDataset)?.versions.map(v => (
                               <option key={v.id} value={v.id}>{v.name}</option>
@@ -2053,12 +2237,13 @@ const WorkflowCanvas = ({ isReadOnly: isReadOnlyProp }: { isReadOnly?: boolean }
 
                       {/* 输出方式 */}
                       <div>
-                        <label className="text-[10px] text-muted-foreground">输出方式</label>
+                        <label className="text-[10px] text-muted-foreground/90 font-medium">输出方式</label>
                         <div className="flex gap-2 mt-1">
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <button onClick={() => setOutputWriteMode("append")}
-                                className={`flex-1 px-2 py-1.5 text-xs rounded-md border ${outputWriteMode === "append" ? "bg-primary text-primary-foreground border-primary" : "bg-background hover:bg-muted/50"}`}>
+                                disabled={isReadOnly}
+                                className={`flex-1 px-2 py-1.5 text-xs rounded-md border shadow-sm transition-all ${outputWriteMode === "append" ? "bg-primary text-primary-foreground border-primary" : "bg-white text-muted-foreground border-gray-200/80 hover:border-gray-300 hover:bg-gray-50"} ${isReadOnly ? "cursor-not-allowed opacity-80" : ""}`}>
                                 追加输出
                               </button>
                             </TooltipTrigger>
@@ -2067,7 +2252,8 @@ const WorkflowCanvas = ({ isReadOnly: isReadOnlyProp }: { isReadOnly?: boolean }
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <button onClick={() => setOutputWriteMode("clear")}
-                                className={`flex-1 px-2 py-1.5 text-xs rounded-md border ${outputWriteMode === "clear" ? "bg-primary text-primary-foreground border-primary" : "bg-background hover:bg-muted/50"}`}>
+                                disabled={isReadOnly}
+                                className={`flex-1 px-2 py-1.5 text-xs rounded-md border shadow-sm transition-all ${outputWriteMode === "clear" ? "bg-primary text-primary-foreground border-primary" : "bg-white text-muted-foreground border-gray-200/80 hover:border-gray-300 hover:bg-gray-50"} ${isReadOnly ? "cursor-not-allowed opacity-80" : ""}`}>
                                 清空后输出
                               </button>
                             </TooltipTrigger>
@@ -2111,10 +2297,11 @@ const WorkflowCanvas = ({ isReadOnly: isReadOnlyProp }: { isReadOnly?: boolean }
             {/* Top: node info */}
             <div className="space-y-2">
               <div>
-                <label className="text-[10px] text-muted-foreground">节点名称（可编辑）</label>
+                <label className="text-[10px] text-muted-foreground/90 font-medium">节点名称（可编辑）</label>
                 <input value={selectedNodeData.label}
                   onChange={e => setNodes(prev => prev.map(n => n.id === selectedNode ? { ...n, label: e.target.value } : n))}
-                  className="w-full mt-0.5 px-2 py-1.5 text-xs border rounded-md bg-background focus:outline-none focus:ring-1 focus:ring-primary/30" />
+                  readOnly={isReadOnly}
+                  className={`${baseInputClass} ${isReadOnly ? "bg-gray-50/50 cursor-not-allowed" : ""}`} />
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div>
@@ -2143,6 +2330,7 @@ const WorkflowCanvas = ({ isReadOnly: isReadOnlyProp }: { isReadOnly?: boolean }
               <p className="text-[10px] font-semibold text-foreground uppercase tracking-wider">参数配置</p>
               {params.map(p => (
                 <ParamFormField key={p.key} param={p}
+                  isReadOnly={isReadOnly}
                   value={selectedNodeData.config[p.key]}
                   onChange={v => updateNodeConfig(selectedNodeData.id, p.key, v)} />
               ))}
@@ -2156,7 +2344,8 @@ const WorkflowCanvas = ({ isReadOnly: isReadOnlyProp }: { isReadOnly?: boolean }
                   <label className="text-[10px] text-muted-foreground">模型</label>
                   <select value={selectedNodeData.config._model || ""}
                     onChange={e => updateNodeConfig(selectedNodeData.id, "_model", e.target.value)}
-                    className="w-full mt-0.5 px-2 py-1.5 text-xs border rounded-md bg-background focus:outline-none focus:ring-1 focus:ring-primary/30">
+                    disabled={isReadOnly}
+                    className={`${baseInputClass} ${isReadOnly ? "bg-gray-50/50 cursor-not-allowed" : ""}`}>
                     <option value="">请选择模型</option>
                     <option value="gpt-4o">GPT-4o（v2024-08, 可用）</option>
                     <option value="qwen-max">通义千问-Max（v2.5, 可用）</option>
@@ -2180,7 +2369,9 @@ const WorkflowCanvas = ({ isReadOnly: isReadOnlyProp }: { isReadOnly?: boolean }
                         {c.compatible === false && <AlertTriangle className="w-3 h-3 text-destructive" />}
                         {direction} {other?.label || "未知"}
                       </span>
-                      <button onClick={() => setConnections(prev => prev.filter(cc => cc.id !== c.id))} className="text-muted-foreground hover:text-destructive">
+                      <button onClick={() => setConnections(prev => prev.filter(cc => cc.id !== c.id))} 
+                        disabled={isReadOnly}
+                        className={`text-muted-foreground hover:text-destructive ${isReadOnly ? "hidden" : ""}`}>
                         <X className="w-3 h-3" />
                       </button>
                     </div>
@@ -2192,7 +2383,7 @@ const WorkflowCanvas = ({ isReadOnly: isReadOnlyProp }: { isReadOnly?: boolean }
 
             {/* Bottom actions */}
             <div className="border-t pt-3 space-y-2">
-              <Button size="sm" variant="outline" className="w-full text-xs h-7" onClick={() => toast.success("参数校验通过")}>
+              <Button size="sm" variant="outline" className="w-full text-xs h-7" onClick={() => toast.success("参数校验通过")} disabled={isReadOnly}>
                 <CheckCircle2 className="w-3 h-3 mr-1" />验证参数
               </Button>
               <div className="flex gap-2">
@@ -2218,11 +2409,16 @@ const WorkflowCanvas = ({ isReadOnly: isReadOnlyProp }: { isReadOnly?: boolean }
         {/* ─── Toolbar ─── */}
         <div className="h-12 border-b bg-card flex items-center justify-between px-4 shrink-0 z-20">
           <div className="flex items-center gap-3">
-            <button onClick={() => navigate("/data-process/workflows")} className="p-1.5 rounded-md hover:bg-muted/50 text-muted-foreground">
+            <button onClick={() => navigate(isExecutionView ? "/data-process/run-records" : "/data-process/workflows")} className="p-1.5 rounded-md hover:bg-muted/50 text-muted-foreground">
               <ArrowLeft className="w-4 h-4" />
             </button>
-            <span className="text-sm font-medium text-foreground">{wfName}</span>
-            {isReadOnly ? (
+            <span className="text-sm font-medium text-foreground">{isExecutionView ? `运行实例 / ${wfName}` : wfName}</span>
+            {isExecutionView ? (
+              <span className="text-xs text-primary-foreground px-2 py-0.5 bg-primary rounded flex items-center gap-1">
+                {debugAllDone ? <CheckCircle2 className="w-3 h-3" /> : <Loader2 className="w-3 h-3 animate-spin" />}
+                {debugAllDone ? "已完成" : "运行中"}
+              </span>
+            ) : isReadOnly ? (
               <span className="text-xs text-muted-foreground px-2 py-0.5 bg-muted rounded">预览模式</span>
             ) : debugMode ? (
               <span className="text-xs text-primary-foreground px-2 py-0.5 bg-primary rounded flex items-center gap-1">
@@ -2290,19 +2486,32 @@ const WorkflowCanvas = ({ isReadOnly: isReadOnlyProp }: { isReadOnly?: boolean }
             {!isReadOnly && (
               <>
                 <div className="w-px h-5 bg-border mx-1" />
-                <button onClick={() => { toast.success("工作流已保存"); }} className="px-3 py-1.5 text-xs border rounded-md hover:bg-muted/50 text-muted-foreground flex items-center gap-1.5" disabled={debugMode}><Save className="w-3.5 h-3.5" /> 保存</button>
-                {debugMode ? (
-                  <button onClick={stopDebug} className="px-3 py-1.5 text-xs bg-destructive text-destructive-foreground rounded-md hover:bg-destructive/90 flex items-center gap-1.5">
-                    <Square className="w-3.5 h-3.5" /> 停止调试
+                <button
+                  onClick={() => { if (!debugMode || debugAllDone) toast.success("工作流已保存"); }}
+                  className="px-3 py-1.5 text-xs border rounded-md hover:bg-muted/50 text-muted-foreground flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
+                  disabled={debugMode && !debugAllDone}
+                >
+                  <Save className="w-3.5 h-3.5" /> 保存
+                </button>
+                <div className="flex items-center gap-2 ml-1">
+                  <button
+                    onClick={debugMode && !debugAllDone ? stopDebug : () => { if (validateWorkflow()) { setPanelMode("debugConfig"); setRightPanelCollapsed(false); } }}
+                    className={`px-3 py-1.5 text-xs rounded-md flex items-center gap-1.5 transition-all duration-200 border ${debugMode && !debugAllDone
+                        ? "bg-destructive text-destructive-foreground border-destructive hover:bg-destructive/90"
+                        : "border-primary text-primary hover:bg-primary/5"
+                      }`}
+                  >
+                    {debugMode && !debugAllDone ? <Square className="w-3.5 h-3.5 fill-current" /> : <Bug className="w-3.5 h-3.5" />}
+                    {debugMode && !debugAllDone ? "停止调试" : "调试"}
                   </button>
-                ) : (
-                  <>
-                    <button onClick={() => { if (validateWorkflow()) { setPanelMode("debugConfig"); setRightPanelCollapsed(false); } }} className="px-3 py-1.5 text-xs border border-primary text-primary rounded-md hover:bg-primary/10 flex items-center gap-1.5">
-                      <Bug className="w-3.5 h-3.5" /> 调试
-                    </button>
-                    <button onClick={() => { if (validateWorkflow()) { setPanelMode("runSubmit"); setRightPanelCollapsed(false); } }} className="px-3 py-1.5 text-xs bg-primary text-primary-foreground rounded-md hover:bg-primary/90 flex items-center gap-1.5"><Play className="w-3.5 h-3.5" /> 运行</button>
-                  </>
-                )}
+                  <button
+                    onClick={() => { if (validateWorkflow()) { setPanelMode("runSubmit"); setRightPanelCollapsed(false); } }}
+                    disabled={debugMode && !debugAllDone}
+                    className="px-3 py-1.5 text-xs bg-primary text-primary-foreground rounded-md hover:bg-primary/90 flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
+                  >
+                    <Play className="w-3.5 h-3.5" /> 运行
+                  </button>
+                </div>
               </>
             )}
           </div>
@@ -2312,7 +2521,7 @@ const WorkflowCanvas = ({ isReadOnly: isReadOnlyProp }: { isReadOnly?: boolean }
 
         <div className="flex flex-1 overflow-hidden">
           {/* ─── Left: Operator panel ─── */}
-          {!isReadOnly && (
+          {!isReadOnly && !isExecutionView && (
             <div
               className="border-r bg-card shrink-0 flex flex-col overflow-hidden transition-all duration-200"
               style={{ width: panelCollapsed ? 48 : 260 }}
@@ -2421,7 +2630,7 @@ const WorkflowCanvas = ({ isReadOnly: isReadOnlyProp }: { isReadOnly?: boolean }
 
           {/* ─── Center: Canvas or JSON ─── */}
           {viewMode === "json" ? (
-            <div className="flex-1 relative overflow-hidden bg-background">
+            <div className="flex-1 relative overflow-hidden bg-[#f8fafc]">
               <div className="absolute top-3 left-3 text-xs text-muted-foreground flex items-center gap-1.5">
                 <Code2 className="w-3.5 h-3.5" /> JSON 源码视图
               </div>
@@ -2435,19 +2644,19 @@ const WorkflowCanvas = ({ isReadOnly: isReadOnlyProp }: { isReadOnly?: boolean }
           ) : (
             <div
               ref={canvasRef}
-              className="flex-1 relative overflow-hidden cursor-grab active:cursor-grabbing"
-              style={{ background: "hsl(var(--muted) / 0.3)" }}
+              className={`flex-1 relative overflow-hidden cursor-grab active:cursor-grabbing ${isExecutionView ? "border-l border-gray-200/60" : ""}`}
+              style={{ background: "#f8fafc" }}
               onMouseDown={startPan}
               onDrop={handleDrop}
               onDragOver={e => e.preventDefault()}
               onWheel={handleWheel}
             >
               {/* Grid background */}
-              <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ opacity: 0.4 }}>
+              <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ opacity: 0.5 }}>
                 <defs>
                   <pattern id="grid" width={20 * zoom} height={20 * zoom} patternUnits="userSpaceOnUse"
                     x={pan.x % (20 * zoom)} y={pan.y % (20 * zoom)}>
-                    <circle cx="1" cy="1" r="0.8" fill="hsl(var(--muted-foreground) / 0.3)" />
+                    <circle cx="1" cy="1" r="0.8" fill="hsl(var(--muted-foreground) / 0.5)" />
                   </pattern>
                 </defs>
                 <rect width="100%" height="100%" fill="url(#grid)" />
@@ -2546,31 +2755,32 @@ const WorkflowCanvas = ({ isReadOnly: isReadOnlyProp }: { isReadOnly?: boolean }
                             <div className="absolute top-[18px] right-[20px] flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity bg-background border rounded-md shadow p-1 z-10 pointer-events-auto">
                               <Tooltip delayDuration={300}>
                                 <TooltipTrigger asChild>
-                                  <button onClick={(e) => { e.stopPropagation(); copyNode(node.id); }} className="p-1 hover:bg-muted rounded text-muted-foreground"><Copy className="w-3.5 h-3.5" /></button>
+                                  <button onClick={(e) => { e.stopPropagation(); copyNode(node.id); }} className="p-1 hover:bg-muted rounded text-muted-foreground" disabled={isReadOnly}><Copy className="w-3.5 h-3.5" /></button>
                                 </TooltipTrigger>
                                 <TooltipContent side="top">复制节点</TooltipContent>
                               </Tooltip>
                               <Tooltip delayDuration={300}>
                                 <TooltipTrigger asChild>
-                                  <button onClick={(e) => { e.stopPropagation(); setNodes(prev => prev.filter(n => n.id !== node.id)); }} className="p-1 hover:bg-muted rounded text-muted-foreground"><Trash2 className="w-3.5 h-3.5" /></button>
+                                  <button onClick={(e) => { e.stopPropagation(); setNodes(prev => prev.filter(n => n.id !== node.id)); }} className="p-1 hover:bg-muted rounded text-muted-foreground" disabled={isReadOnly}><Trash2 className="w-3.5 h-3.5" /></button>
                                 </TooltipTrigger>
                                 <TooltipContent side="top">删除节点</TooltipContent>
                               </Tooltip>
                             </div>
 
                             <div
-                              onMouseDown={e => { if (!debugMode) startNodeDrag(e, node.id); }}
+                              onMouseDown={e => { if (!debugMode && !isReadOnly) startNodeDrag(e, node.id); }}
                               onClick={e => {
                                 e.stopPropagation();
                                 setSelectedNode(node.id);
                                 setSelectedConnection(null);
-                                if (debugMode) { setLogNodeId(node.id); setShowLogPanel(true); }
+                                setRightPanelTab("config");
+                                setRightPanelCollapsed(false);
                               }}
                               onDoubleClick={(e) => {
                                 e.stopPropagation();
-                                if (!debugMode) startRename(node.id, node.customLabel || node.label);
+                                if (!debugMode && !isReadOnly) startRename(node.id, node.customLabel || node.label);
                               }}
-                              className={`rounded-lg border bg-card shadow-sm select-none transition-all duration-200 pointer-events-auto ${debugMode ? "cursor-pointer" : "cursor-grab"} ${isSelected ? "border-primary ring-1 ring-primary/20 shadow-lg" : "border-border hover:border-primary/50 hover:shadow-md"} ${debugMode && nodeDebug?.status === "running" ? "ring-2 ring-primary ring-offset-1" : ""} ${nodeDebug?.status === "error" ? "border-destructive ring-1 ring-destructive/20" : ""}`}
+                              className={`rounded-lg border bg-card shadow-sm select-none transition-all duration-200 pointer-events-auto ${debugMode || isReadOnly ? "cursor-pointer" : "cursor-grab"} ${isSelected ? "border-primary ring-1 ring-primary/20 shadow-lg" : "border-border hover:border-primary/50 hover:shadow-md"} ${debugMode && nodeDebug?.status === "running" ? "ring-2 ring-primary ring-offset-1" : ""} ${nodeDebug?.status === "error" ? "border-destructive ring-1 ring-destructive/20" : ""}`}
                               style={{ width: NODE_W }}
                             >
                               {/* Header */}
@@ -2583,7 +2793,7 @@ const WorkflowCanvas = ({ isReadOnly: isReadOnlyProp }: { isReadOnly?: boolean }
                                 </div>
 
                                 <div className="flex-1 min-w-0">
-                                  {editingNodeId === node.id ? (
+                                  {editingNodeId === node.id && !isReadOnly ? (
                                     <input
                                       autoFocus
                                       className="w-full bg-background border rounded px-1 text-[13px] font-bold focus:outline-none"
@@ -2623,7 +2833,26 @@ const WorkflowCanvas = ({ isReadOnly: isReadOnlyProp }: { isReadOnly?: boolean }
                                     </div>
                                   )}
 
-                                  <button onClick={(e) => { e.stopPropagation(); toggleNodeCollapsed(node.id); }} className="p-[2px] hover:bg-muted rounded text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
+                                  {debugMode && (
+                                    <Tooltip delayDuration={300}>
+                                      <TooltipTrigger asChild>
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setLogNodeId(node.id);
+                                            setRightPanelTab("debug");
+                                            setRightPanelCollapsed(false);
+                                          }}
+                                          className={`p-1 rounded transition-colors border ${logNodeId === node.id && rightPanelTab === 'debug' ? 'bg-primary/20 text-primary border-primary/30' : 'hover:bg-primary/10 text-primary/70 hover:text-primary border-transparent hover:border-primary/20'}`}
+                                        >
+                                          <ClipboardList className="w-3.5 h-3.5" />
+                                        </button>
+                                      </TooltipTrigger>
+                                      <TooltipContent side="top">查看日志</TooltipContent>
+                                    </Tooltip>
+                                  )}
+
+                                  <button onClick={(e) => { e.stopPropagation(); toggleNodeCollapsed(node.id); }} className="p-[2px] hover:bg-muted rounded text-muted-foreground transition-colors">
                                     {node.isCollapsed ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronUp className="w-3.5 h-3.5" />}
                                   </button>
                                 </div>
@@ -2734,7 +2963,7 @@ const WorkflowCanvas = ({ isReadOnly: isReadOnlyProp }: { isReadOnly?: boolean }
 
               {/* ─── Minimap ─── */}
               {showMinimap && minimapData && minimapViewport && (
-                <div className="absolute bottom-3 left-3 rounded-lg border bg-card/90 backdrop-blur shadow-lg overflow-hidden"
+                <div className="absolute bottom-4 left-4 rounded-xl border border-black/5 bg-white shadow-sm overflow-hidden"
                   style={{ width: MINIMAP_W, height: MINIMAP_H }}>
                   <svg
                     width={MINIMAP_W}
@@ -2744,7 +2973,7 @@ const WorkflowCanvas = ({ isReadOnly: isReadOnlyProp }: { isReadOnly?: boolean }
                     onMouseMove={handleMinimapMouseMove}
                   >
                     {/* Background */}
-                    <rect width={MINIMAP_W} height={MINIMAP_H} fill="hsl(var(--muted) / 0.5)" />
+                    <rect width={MINIMAP_W} height={MINIMAP_H} fill="#ffffff" />
 
                     {/* Connections */}
                     {connections.map(conn => {
@@ -2758,7 +2987,7 @@ const WorkflowCanvas = ({ isReadOnly: isReadOnlyProp }: { isReadOnly?: boolean }
                       const ty = (toNode.y + NODE_H / 2 - minY) * scale;
                       return (
                         <line key={conn.id} x1={fx} y1={fy} x2={tx} y2={ty}
-                          stroke={conn.compatible === false ? "hsl(var(--destructive))" : "hsl(var(--muted-foreground) / 0.3)"}
+                          stroke={conn.compatible === false ? "#fca5a5" : "#e2e8f0"}
                           strokeWidth={1} />
                       );
                     })}
@@ -2771,24 +3000,27 @@ const WorkflowCanvas = ({ isReadOnly: isReadOnlyProp }: { isReadOnly?: boolean }
                       const ny = (node.y - minY) * scale;
                       const nw = NODE_W * scale;
                       const nh = NODE_H * scale;
+                      const isSelected = selectedNode === node.id;
                       return (
                         <rect key={node.id} x={nx} y={ny} width={Math.max(nw, 4)} height={Math.max(nh, 3)}
-                          rx={1}
-                          fill={catColors[node.category] || "hsl(var(--primary))"}
-                          opacity={selectedNode === node.id ? 1 : 0.7} />
+                          rx={2}
+                          fill={isSelected ? "#cbd5e1" : "#f1f5f9"}
+                          stroke={isSelected ? "#94a3b8" : "#cbd5e1"}
+                          strokeWidth={isSelected ? 1.5 : 1}
+                        />
                       );
                     })}
 
                     {/* Viewport rectangle */}
                     <rect
-                      x={Math.max(0, minimapViewport.x)}
-                      y={Math.max(0, minimapViewport.y)}
-                      width={Math.min(minimapViewport.w, MINIMAP_W)}
-                      height={Math.min(minimapViewport.h, MINIMAP_H)}
-                      fill="hsl(var(--primary) / 0.1)"
-                      stroke="hsl(var(--primary))"
-                      strokeWidth={1.5}
-                      rx={2}
+                      x={minimapViewport.x}
+                      y={minimapViewport.y}
+                      width={minimapViewport.w}
+                      height={minimapViewport.h}
+                      fill="rgba(0, 0, 0, 0.03)"
+                      stroke="rgba(0, 0, 0, 0.15)"
+                      strokeWidth={1}
+                      rx={4}
                     />
                   </svg>
                 </div>
@@ -2823,34 +3055,54 @@ const WorkflowCanvas = ({ isReadOnly: isReadOnlyProp }: { isReadOnly?: boolean }
                 </div>
               )}
 
-              {/* ─── Debug Log Panel ─── */}
-              {debugMode && showLogPanel && logNodeId && (
-                <div className="absolute bottom-0 left-0 right-0 bg-card border-t shadow-lg animate-fade-in" style={{ height: 200 }}>
-                  <div className="flex items-center justify-between px-3 py-1.5 border-b bg-muted/30">
+              {/* ─── Expanded Debug Log Drawer ─── */}
+              {debugMode && isLogExpanded && (
+                <div
+                  className="absolute bottom-0 left-0 right-0 bg-card border-t shadow-sm flex flex-col z-50 animate-fade-in"
+                  style={{ height: logHeight }}
+                  onMouseDown={(e) => e.stopPropagation()}
+                  onWheel={(e) => e.stopPropagation()}
+                >
+                  <div
+                    onMouseDown={() => setIsDraggingLog(true)}
+                    className="absolute top-0 left-0 w-full h-1 cursor-row-resize hover:bg-primary/50 z-50 transition-colors"
+                  />
+                  <div className="px-3 py-1.5 border-b bg-muted/20 flex justify-between items-center shrink-0">
                     <div className="flex items-center gap-2">
-                      <Terminal className="w-3.5 h-3.5 text-muted-foreground" />
-                      <span className="text-xs font-medium text-foreground">
-                        {nodes.find(n => n.id === logNodeId)?.label || logNodeId} — 实时日志
+                      <Terminal className="w-3.5 h-3.5 text-primary" />
+                      <span className="text-[10px] font-semibold uppercase tracking-wider">节点日志详情</span>
+                      <span className="text-[10px] text-muted-foreground truncate max-w-[300px]">
+                        {nodes.find(n => n.id === logNodeId)?.label || "未选择节点"}
                       </span>
-                      {debugNodeStates[logNodeId]?.status === "running" && (
-                        <Loader2 className="w-3 h-3 text-primary animate-spin" />
-                      )}
-                      {debugNodeStates[logNodeId]?.status === "done" && (
-                        <CheckCircle2 className="w-3 h-3" style={{ color: "hsl(142 71% 45%)" }} />
-                      )}
                     </div>
-                    <button onClick={() => setShowLogPanel(false)} className="p-1 rounded hover:bg-muted/50 text-muted-foreground">
-                      <X className="w-3.5 h-3.5" />
-                    </button>
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => setIsLogExpanded(false)}
+                        className="p-1 hover:bg-muted/50 rounded text-muted-foreground hover:text-foreground transition-colors"
+                        title="还原至侧边栏"
+                      >
+                        <Minimize2 className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => { setIsLogExpanded(false); setLogNodeId(null); }}
+                        className="p-1 hover:bg-muted/50 rounded text-muted-foreground hover:text-foreground transition-colors"
+                        title="关闭日志"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
-                  <div className="overflow-y-auto p-3 font-mono text-[11px] text-foreground/80 space-y-0.5" style={{ height: 160 }}>
-                    {(debugLogs[logNodeId] || []).length === 0 ? (
-                      <p className="text-muted-foreground">等待执行...</p>
+                  <div className="flex-1 overflow-y-auto p-3 font-mono text-[11px] text-foreground/80 bg-muted/5 leading-relaxed cursor-text selection:bg-primary/30">
+                    {!logNodeId ? (
+                      <div className="flex flex-col items-center justify-center h-full text-xs text-muted-foreground/60">
+                        <Terminal className="w-6 h-6 mb-2 opacity-50" />
+                        请在右侧明细中选择节点
+                      </div>
+                    ) : (debugLogs[logNodeId] || []).length === 0 ? (
+                      <div className="text-muted-foreground/50 text-[10px]">暂无日志输出...</div>
                     ) : (
                       (debugLogs[logNodeId] || []).map((line, i) => (
-                        <div key={i} className="leading-relaxed">
-                          <span className="text-muted-foreground">{line}</span>
-                        </div>
+                        <div key={i} className="mb-1 whitespace-pre-wrap">{line}</div>
                       ))
                     )}
                   </div>
