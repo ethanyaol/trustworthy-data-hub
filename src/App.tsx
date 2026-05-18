@@ -13,6 +13,7 @@ import { lazy, Suspense } from "react";
 
 const ConsoleDashboard = lazy(() => import("./pages/console/ConsoleDashboard"));
 const ConsoleSpaces = lazy(() => import("./pages/console/ConsoleSpaces"));
+const ConsoleAnnotationTeams = lazy(() => import("./pages/console/ConsoleAnnotationTeams"));
 const ConsoleOrganizations = lazy(() => import("./pages/console/ConsoleOrganizations"));
 const ConsoleOrgMembers = lazy(() => import("./pages/console/ConsoleOrgMembers"));
 const ConsoleMembers = lazy(() => import("./pages/console/ConsoleMembers"));
@@ -44,6 +45,13 @@ const DataAnnotationPerformance = lazy(() => import("./pages/data-annotation/Dat
 const DataAnnotationStatistics = lazy(() => import("./pages/data-annotation/DataAnnotationStatistics"));
 const AnnotationToolEditor = lazy(() => import("./pages/data-annotation/AnnotationToolEditor"));
 const DataAnnotationToolDetail = lazy(() => import("./pages/data-annotation/DataAnnotationToolDetail"));
+const DataAnnotationModels = lazy(() => import("./pages/data-annotation/DataAnnotationModels"));
+const DataAnnotationModelVersionManage = lazy(
+  () => import("./pages/data-annotation/DataAnnotationModelVersionManage")
+);
+const DataAnnotationModelVersionForm = lazy(
+  () => import("./pages/data-annotation/DataAnnotationModelVersionForm")
+);
 
 const DataServiceMarketplace = lazy(() => import("./pages/data-service/DataServiceMarketplace"));
 const DatasetDetail = lazy(() => import("./pages/data-service/DatasetDetail"));
@@ -78,6 +86,7 @@ const App = () => (
                   {/* 002 控制台 */}
                   <Route path="/console/dashboard" element={<ConsoleDashboard />} />
                   <Route path="/console/spaces" element={<ConsoleSpaces />} />
+                  <Route path="/console/annotation-teams" element={<ConsoleAnnotationTeams />} />
                   <Route path="/console/organizations" element={<ConsoleOrganizations />} />
                   <Route path="/console/organizations/:orgId/members" element={<ConsoleOrgMembers />} />
                   <Route path="/console/members" element={<ConsoleMembers />} />
@@ -110,6 +119,9 @@ const App = () => (
                   <Route path="/data-annotation/tools" element={<DataAnnotationTools />} />
                   <Route path="/data-annotation/tools/:id" element={<DataAnnotationToolDetail />} />
                   <Route path="/data-annotation/tool-editor" element={<AnnotationToolEditor />} />
+                  <Route path="/data-annotation/models" element={<DataAnnotationModels />} />
+                  <Route path="/data-annotation/models/versions" element={<DataAnnotationModelVersionManage />} />
+                  <Route path="/data-annotation/models/version-form" element={<DataAnnotationModelVersionForm />} />
                   <Route path="/data-annotation/performance" element={<DataAnnotationPerformance />} />
                   <Route path="/data-annotation/statistics" element={<DataAnnotationStatistics />} />
 

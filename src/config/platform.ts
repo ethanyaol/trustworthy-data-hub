@@ -8,6 +8,7 @@ import {
   Layout,
   UserCheck,
   Cpu,
+  Brain,
 } from "lucide-react";
 
 export interface SubPlatform {
@@ -52,6 +53,7 @@ export const platformMenus: Record<string, MenuItem[]> = {
       route: "#",
       children: [
         { id: "spaces", label: "空间管理", icon: Boxes, route: "/console/spaces" },
+        { id: "annotation-teams", label: "标注团队", icon: Users, route: "/console/annotation-teams" },
       ]
     },
     {
@@ -184,6 +186,7 @@ export const platformMenus: Record<string, MenuItem[]> = {
       route: "#",
       children: [
         { id: "tools", label: "标注工具", icon: Hammer, route: "/data-annotation/tools" },
+        { id: "models", label: "模型管理", icon: Brain, route: "/data-annotation/models" },
       ]
     },
   ],
